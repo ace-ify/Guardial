@@ -1,9 +1,9 @@
-# Presentation Demo Script for Prompt Shield
+# Presentation Demo Script for Guardial
 
 ## Quick Demo Flow (5-7 minutes)
 
 ### 1. Introduction (1 min)
-"Prompt Shield is a security layer that sits between users and LLMs, detecting harmful content, redacting PII, and blocking prompt injection attempts before they reach the model."
+"Guardial is a security layer that sits between users and LLMs, detecting harmful content, redacting PII, and blocking prompt injection attempts before they reach the model."
 
 ### 2. Live Demo: Safe Prompt (30 seconds)
 **Input:**

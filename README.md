@@ -1,4 +1,4 @@
-# Prompt Shield
+# Guardial
 
 A small Flask app that shields LLM prompts with:
 - Harmful content detection (ML model + keyword fallback) + optional LLM classifier

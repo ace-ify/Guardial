@@ -1,6 +1,6 @@
-# Prompt Shield Demo - Test Cases for Hackathon Presentation
+# Guardial Demo - Test Cases for Hackathon Presentation
 
-This folder contains test prompts to demonstrate the Prompt Shield capabilities.
+This folder contains test prompts to demonstrate the Guardial capabilities.
 
 ## How to Use
 
