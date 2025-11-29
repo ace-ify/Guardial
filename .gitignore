@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+
+# Virtual environments
+.venv/
+.env
+
+# Logs and temp
+prompt_shield.log
+*.log
+.tmp/
+cached_lm_*
+
+
+tmp_*.json
+
+# Models and large binaries
+models/
+*.joblib
+chroma_db/
+forged_model/
+unlearned_model/
+unlearning_output/
+uploads/
+
+# VS Code
+.vscode/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Node (if any)
+node_modules/
+
+# Public static secrets safeguard
+templates/public/*.json
+
+
+.github/instructions/kluster-code-verify.instructions.md
+.kluster

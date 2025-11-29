@@ -1,0 +1,14 @@
+Flask
+python-dotenv
+google-generativeai
+scikit-learn
+pandas
+joblib
+spacy
+gunicorn
+chromadb
+sentence-transformers
+transformers
+peft
+torch
+accelerate

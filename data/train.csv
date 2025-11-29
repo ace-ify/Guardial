@@ -1,0 +1,13 @@
+comment_text,toxic,severe_toxic,obscene,threat,insult,identity_hate
+"You are amazing and I love your work",0,0,0,0,0,0
+"I hate you so much you are terrible",1,0,0,0,0,0
+"This is a great post thanks for sharing",0,0,0,0,0,0
+"You are an idiot and a loser",1,0,1,0,1,0
+"Have a nice day friend",0,0,0,0,0,0
+"I will kill you and your family",1,1,0,1,0,0
+"What a beautiful sunset",0,0,0,0,0,0
+"Go die in a fire",1,1,1,1,0,0
+"The weather is nice today",0,0,0,0,0,0
+"You are stupid",1,0,0,0,1,0
+"I appreciate your help",0,0,0,0,0,0
+"Shut up you moron",1,0,1,0,1,0

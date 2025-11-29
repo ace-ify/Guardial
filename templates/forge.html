@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guardial | Model Forge</title>
+    <style>
+        :root {
+            /* Minimal monochrome palette */
+            --bg: #000000;           /* black */
+            --bg-elev: #000000;      /* deep black */
+            --bg-panel: #0e1320;     /* elevated panel */
+            --text: #ffffff;         /* white */
+            --muted: #c9d1d9;        /* soft gray */
+            --accent: #ffffff;       /* white accent */
+            --accent-2: #9aa4af;     /* secondary gray */
+            --gold: #d6d6d6;         /* subtle silver/metal accent */
+            --border: #222a36;       /* subtle border */
+            --code: #000000;         /* code dark */
+            --card-bg: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+            --card-border: rgba(255,255,255,0.10);
+            --shadow: 0 10px 30px rgba(230, 230, 230, 0.12);
+        }
+        * { box-sizing: border-box; }
+        html, body {
+            margin: 0; padding: 0; background: var(--bg); color: var(--text); scroll-behavior: smooth;
+            font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+            line-height: 1.6; font-size: 16px;
+            cursor: none; /* hide native cursor to fully replace with custom dot */
+        }
+        /* Bottom blurred strip - subtle and cloudy */
+        body::after {
+            content: '';
+            position: fixed;
+            bottom: -10px;
+            left: 0;
+            width: 100%;
+            height: calc(4cm + 50px);
+            background: radial-gradient(ellipse at 50% 120%, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.45) 40%, transparent 70%);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            pointer-events: none;
+            z-index: 9999;
+            mask-image: linear-gradient(to top, black 20%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to top, black 20%, transparent 100%);
+        }
+        /* Ensure native cursor stays hidden on interactive controls */
+        a, button, input, textarea, select, label, .caro-btn, .tab-btn, .copy-btn, .toggle-btn { cursor: none !important; }
+        :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+
+        /* Navbar: centered, detached, rounded */
+        .nav {
+            position: fixed; top: 36px; left: 50%; transform: translateX(-50%); z-index: 20;
+            width: clamp(320px, 90vw, 900px);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 22px 36px;
+            background: rgba(0, 0, 0, 0.75);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+            transition: top .28s ease, padding .28s ease, border-radius .28s ease, background .28s ease, transform .28s ease;
+        }
+        /* Shrink state applied on scroll: pulls closer to top and tightens spacing */
+        .nav.shrink {
+            top: 12px;
+            padding: 12px 18px;
+            border-radius: 18px;
+            background: rgba(0, 0, 0, 0.85);
+            transform: translateX(-50%) translateY(0);
+        }
+        .nav-left { display: flex; align-items: center; gap: 18px; }
+        .brand { display: flex; align-items: center; gap: 12px; }
+    .brand img.logo { height: 36px; width: auto; display: block; filter: drop-shadow(0 2px 10px rgba(255, 255, 255, 0.25)); transition: height .28s ease, filter .28s ease; }
+        .nav.shrink .brand img.logo { height: 26px; filter: drop-shadow(0 1px 6px rgba(255,255,255,0.2)); }
+        .links a {
+            position: relative;
+            color: rgba(255,255,255,0.9);
+            margin-left: 20px; text-decoration: none; font-weight: 600; font-size: 15px; letter-spacing: 0.2px;
+            transition: color .2s ease, text-shadow .2s ease, margin .28s ease, font-size .28s ease;
+        }
+        .nav.shrink .links a { margin-left: 14px; font-size: 14px; }
+        .links a::after{
+            content: ""; position: absolute; left: 0; right: 0; bottom: -8px; height: 2px;
+            background: linear-gradient(90deg, rgba(214,214,214,0.95), rgba(214,214,214,0.6));
+            transform: scaleX(0); transform-origin: left; transition: transform .2s ease;
+            border-radius: 2px;
+        }
+        .links a:hover { color: #ffffff; text-shadow: 0 0 16px rgba(255, 255, 255, 0.25); }
+        .links a:hover::after { transform: scaleX(1); }
+
+        /* Try now button */
+        .btn-try {
+            display: inline-flex; align-items: center; gap: 10px;
+            padding: 10px 16px; margin-left: 0;
+            /* Metallic finish: grain + sheen + body */
+            background:
+                /* subtle horizontal grain */
+                repeating-linear-gradient(90deg, rgba(255,255,255,0.06) 0px, rgba(255,255,255,0.06) 1px, rgba(0,0,0,0.05) 1px, rgba(0,0,0,0.05) 2px),
+                /* vertical sheen bands */
+                linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.15) 35%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.20) 65%, rgba(255,255,255,0.55) 100%),
+                /* metal body */
+                linear-gradient(135deg, #f2f2f2 0%, #d1d1d1 25%, #ededed 50%, #c6c6c6 75%, #e0e0e0 100%);
+            color: #0b1520; border-radius: 999px; font-weight: 800; letter-spacing: .2px; text-decoration: none;
+            border: 1px solid rgba(0,0,0,0.22);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.65), inset 0 -1px 0 rgba(0,0,0,0.25), 0 10px 24px rgba(0, 0, 0, 0.35);
+            transition: transform .15s ease, filter .15s ease, box-shadow .15s ease, background .15s ease, padding .28s ease;
+        }
+        .nav.shrink .btn-try { padding: 8px 12px; }
+        .btn-try:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.01);
+            box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45);
+            background: #000000;
+            color: #ffffff; text-decoration: none;
+        }
+        .btn-try::after { content: none; }
+
+        @keyframes arrow-nudge {
+            0% { transform: translateX(0); }
+            50% { transform: translateX(2px); }
+            100% { transform: translateX(0); }
+        }
+        .btn-try .arrow {
+            display: inline-grid; place-items: center; transition: transform .18s ease; animation: arrow-nudge 1.6s ease-in-out infinite;
+            width: 22px; height: 22px; border-radius: 999px; background: #000000; color: #ffffff; font-size: 14px; line-height: 1;
+        }
+        .nav.shrink .btn-try .arrow { width: 20px; height: 20px; font-size: 12px; }
+    .btn-try:hover .arrow { transform: translateX(4px); background: #ffffff; color: #000000; }
+
+        /* Hero with Spline */
+        .hero { position: relative; height: 100vh; width: 100%; overflow: hidden; }
+        .spline-container { position: absolute; inset: 0; display: flex; justify-content: center; align-items: center; }
+        .spline-container iframe { width: 100%; height: 100%; transform: scale(1.2); border: 0; }
+        .hero-title { position: absolute; bottom: 40px; left: 40px; font-size: 32px; font-weight: 700; text-shadow: 0 6px 24px rgba(0,0,0,0.5); }
+        .hero-title strong { color: var(--accent); }
+
+        /* Main sections */
+        main { position: relative; z-index: 1; }
+    .section { max-width: 1280px; margin: 0 auto; padding: 96px 24px; }
+        .section { scroll-margin-top: 96px; }
+    .section h2 { margin: 0 0 16px; font-size: 36px; letter-spacing: 0.2px; }
+    .section p.lead { color: var(--muted); margin: 0 0 28px; font-size: 18px; }
+
+        .panel { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 14px; padding: 20px; box-shadow: var(--shadow); }
+        .row { display: grid; grid-template-columns: 1fr; gap: 16px; }
+        @media (min-width: 900px) { .row.two { grid-template-columns: 1fr 1fr; } }
+
+        /* (removed unused screenshot/window styles) */
+        /* .screenshot-frame, .window-chrome, .dot, .window-title, .screenshot-body */
+        .content { display: grid; gap: 20px; }
+    .card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 18px; }
+    .input-row { display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: end; }
+        .result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 900px) { .result-grid { grid-template-columns: 1fr; } }
+
+        .label-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; gap: 10px; }
+        label { display: block; font-weight: 700; letter-spacing: .2px; margin-bottom: 8px; color: var(--text); font-size: 15px; }
+        textarea {
+            width: 100%; min-height: 160px; resize: vertical;
+            background: var(--bg-elev); color: var(--text);
+            border: 1px solid var(--border); border-radius: 12px; padding: 12px; font-size: 15px;
+            transition: box-shadow .15s ease, border-color .15s ease;
+        }
+    textarea:focus { outline: none; border-color: rgba(255,255,255,0.35); box-shadow: 0 0 0 2px rgba(255,255,255,0.14); }
+        .hint { color: var(--muted); font-size: 12px; margin-top: 8px; opacity: 0.9; }
+        button {
+            background: linear-gradient(135deg, #ffffff, #dcdcdc);
+            color: #001018; font-weight: 700; border: none; border-radius: 12px; padding: 14px 22px; cursor: pointer;
+            box-shadow: 0 8px 20px rgba(255, 255, 255, 0.12);
+            transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+        }
+        button:hover { filter: brightness(1.07); transform: translateY(-1px); box-shadow: 0 12px 28px rgba(255, 255, 255, 0.18); }
+        .btn-outline { background: transparent; color: rgba(255,255,255,0.95); border: 1px solid rgba(255,255,255,0.22); box-shadow: none; padding: 14px 18px; }
+        .btn-outline:hover { background: rgba(255,255,255,0.06); box-shadow: none; }
+
+        .copy-btn {
+            background: rgba(255,255,255,0.06);
+            color: rgba(255,255,255,0.9);
+            border: 1px solid rgba(255,255,255,0.15);
+            padding: 6px 10px; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer;
+            transition: background .15s ease, color .15s ease, border-color .15s ease, transform .15s ease;
+        }
+        .copy-btn:hover { background: rgba(255,255,255,0.1); transform: translateY(-1px); }
+
+    /* New Workbench layout */
+    .workbench { border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; overflow: hidden; background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015)); box-shadow: 0 18px 44px rgba(0,0,0,0.4); }
+    .wb-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 16px; background: rgba(7,12,24,0.6); border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .wb-title { display: flex; align-items: center; gap: 12px; font-weight: 800; letter-spacing: .2px; }
+    .wb-actions { display: flex; align-items: center; gap: 10px; }
+    .wb-body { padding: 16px; }
+    .grid.two { display: grid; grid-template-columns: 1.1fr 1fr; gap: 16px; }
+    /* Resizable split */
+    .grid.two.resizable { grid-template-columns: var(--left-col, 1.1fr) 8px var(--right-col, 1fr); align-items: stretch; }
+    .divider { width: 8px; border-radius: 8px; background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.08)); cursor: col-resize; transition: background .15s ease, box-shadow .15s ease; }
+    .divider:hover { background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.14)); box-shadow: 0 0 0 2px rgba(255,255,255,0.05) inset; }
+    @media (max-width: 1000px) { .grid.two.resizable { grid-template-columns: 1fr; } .divider { display: none; } }
+    @media (max-width: 1000px) { .grid.two { grid-template-columns: 1fr; } }
+
+    /* Ensure right (flow) panel matches left chat height and expands cleanly */
+    #flowCard { display: flex; flex-direction: column; min-height: 480px; }
+    #flowCard .tabbar { flex: 0 0 auto; }
+    #flowCard .tab { flex: 1 1 auto; display: none; overflow: auto; }
+    #flowCard .tab.active { display: flex; flex-direction: column; opacity: 1; transform: none; }
+    #flowCard .pre-container { flex: 1 1 auto; max-height: none; display: flex; flex-direction: column; }
+    #flowCard pre { flex: 1 1 auto; }
+
+    /* Tabs */
+    .tabbar { display: flex; gap: 8px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 6px; margin-bottom: 12px; }
+    .tab-btn { background: transparent; color: rgba(255,255,255,0.85); border: none; border-radius: 8px; padding: 8px 12px; font-weight: 700; cursor: pointer; transition: background .15s ease, color .15s ease; }
+    .tab-btn.active { background: rgba(255,255,255,0.12); color: #fff; }
+    .tab { display: none; opacity: 0; transform: translateY(4px); transition: opacity .18s ease, transform .18s ease; }
+    .tab.active { display: block; opacity: 1; transform: translateY(0); }
+
+    /* Select (Examples) */
+    .select { background: rgba(255,255,255,0.04); color: #fff; border: 1px solid rgba(255,255,255,0.16); border-radius: 10px; padding: 10px 12px; font-weight: 600; appearance: none; outline: none; }
+    .select:focus { border-color: rgba(255,255,255,0.35); box-shadow: 0 0 0 2px rgba(255,255,255,0.14); }
+
+    /* Send button loading state */
+    #sendBtn .spinner { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.35); border-top-color: #ffffff; border-radius: 50%; display: none; animation: spin 0.8s linear infinite; }
+    #sendBtn.loading .spinner { display: inline-block; }
+    #sendBtn.loading .btn-label { opacity: 0.7; }
+    button:disabled, .btn-outline:disabled { opacity: 0.6; cursor: not-allowed; filter: none; transform: none; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+        pre {
+            background: var(--code); color: #dbeafe; border: 1px solid var(--border);
+            border-radius: 12px; padding: 12px; white-space: pre-wrap; word-break: break-word; font-size: 14px; line-height: 1.5;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            max-height: 320px; overflow: auto;
+        }
+        /* Global wrap toggle */
+        body.no-wrap pre { white-space: pre; word-break: normal; overflow: auto; }
+
+        /* Collapsible pre containers for big content */
+        .pre-container { position: relative; max-height: 280px; overflow: hidden; border-radius: 12px; }
+        .pre-container.expanded { max-height: none; }
+    .pre-container .fade { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 60px; background: linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,0.85)); display: none; pointer-events: none; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; }
+        .pre-container.collapsed .fade { display: block; }
+
+        .toggle-btn { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.9); border: 1px solid rgba(255,255,255,0.15); padding: 6px 10px; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer; transition: background .15s ease, transform .15s ease; }
+        .toggle-btn:hover { background: rgba(255,255,255,0.1); transform: translateY(-1px); }
+
+    /* Problems section (Why Armor) */
+    .problem-section h2 { margin: 0 0 8px; font-size: 34px; }
+    .problem-section p.sub { color: var(--muted); margin: 0 0 28px; font-size: 17px; }
+    .problem-grid { display: grid; grid-template-columns: 1fr; gap: 18px; }
+    @media (min-width: 900px) { .problem-grid { grid-template-columns: repeat(3, 1fr); } }
+    .problem-card { position: relative; background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015)); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 22px; box-shadow: 0 16px 40px rgba(0,0,0,0.35); overflow: hidden; }
+    .problem-card::after { content: attr(data-idx); position: absolute; top: 16px; right: 16px; font-weight: 800; font-size: 56px; color: rgba(214,214,214,0.12); letter-spacing: 1px; }
+    .p-icon { width: 56px; height: 56px; border-radius: 14px; display: grid; place-items: center; background: radial-gradient(60% 60% at 50% 30%, rgba(255,255,255,0.22), rgba(255,255,255,0.09)); border: 1px solid rgba(255,255,255,0.25); color: var(--accent); margin-bottom: 14px; box-shadow: 0 10px 30px rgba(255,255,255,0.15); }
+    .problem-card h3 { margin: 0 0 8px; font-size: 20px; }
+    .problem-card p { margin: 0 0 12px; color: var(--muted); }
+    .p-metric { margin-top: 14px; font-weight: 800; font-size: 22px; color: var(--accent); }
+    .p-metric small { display: block; font-weight: 700; font-size: 12px; color: rgba(255,255,255,0.55); letter-spacing: .3px; margin-top: 4px; text-transform: uppercase; }
+
+        /* Features stack (card pile) */
+        .features-section h2 { margin: 0 0 8px; font-size: 34px; }
+        .features-section p.sub { color: var(--muted); margin: 0 0 28px; font-size: 17px; }
+        .carousel { position: relative; max-width: 1100px; margin: 0 auto; }
+        .stack { position: relative; display: grid; grid-auto-flow: column; grid-auto-columns: 88%; gap: 20px; overflow-x: auto; padding: 10px 8px 14px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
+        .stack::-webkit-scrollbar { height: 8px; }
+        .stack::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 8px; }
+        .stack-card {
+            position: relative; top: auto;
+            width: 100%; border-radius: 16px; padding: 22px; box-sizing: border-box; scroll-snap-align: center;
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0.95), rgba(35, 35, 35, 0.9));
+            border: 1px solid rgba(255,255,255,0.12);
+            box-shadow: 0 18px 44px rgba(0,0,0,0.40);
+            transform: scale(0.95);
+            transition: transform .25s ease, box-shadow .25s ease;
+            overflow: hidden; isolation: isolate; z-index: 1;
+        }
+        .stack-card.active { transform: scale(1); box-shadow: 0 28px 64px rgba(0,0,0,0.55); z-index: 2; }
+    .stack-card::after { content: attr(data-idx); position: absolute; right: 18px; top: 12px; font-weight: 800; font-size: 56px; color: rgba(214,214,214,0.12); }
+        .f-head { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+    .f-icon { width: 48px; height: 48px; border-radius: 12px; display: grid; place-items: center; background: radial-gradient(60% 60% at 50% 30%, rgba(255,255,255,0.22), rgba(255,255,255,0.09)); border: 1px solid rgba(255,255,255,0.25); color: var(--accent); }
+        .f-title { font-size: 20px; font-weight: 800; letter-spacing: .2px; }
+        .f-body { color: var(--muted); margin: 0 0 10px; }
+        .feature-list { list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 8px; }
+        .feature-list li { position: relative; padding-left: 20px; word-break: break-word; }
+    .feature-list li::before { content: ""; position: absolute; left: 0; top: 8px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 10px rgba(255,255,255,0.25); }
+
+        /* Carousel nav */
+        .caro-btn { position: absolute; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; border-radius: 999px; display: grid; place-items: center; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.16); color: #fff; cursor: pointer; transition: background .15s ease, transform .15s ease; }
+        .caro-btn:hover { background: rgba(255,255,255,0.14); transform: translateY(-50%) scale(1.03); }
+        .caro-btn:disabled { opacity: .4; cursor: not-allowed; }
+        .caro-btn.prev { left: -6px; }
+        .caro-btn.next { right: -6px; }
+
+        @media (prefers-reduced-motion: reduce) {
+            .stack-card { transition: none; }
+        }
+
+        /* How it works (vertical timeline) */
+        .how-section h2 { margin: 0 0 8px; font-size: 34px; }
+        .how-section p.sub { color: var(--muted); margin: 0 0 28px; font-size: 17px; }
+        .timeline { position: relative; max-width: 1100px; margin: 0 auto; display: grid; gap: 36px; }
+        /* Track */
+        .timeline::before { content: ""; position: absolute; left: 88px; top: 0; bottom: 0; width: 2px; background: rgba(255,255,255,0.08); border-radius: 2px; }
+        /* Progress bar that grows downward while scrolling */
+    .timeline .progress { position: absolute; left: 88px; top: 0; width: 3px; height: 100%; background: linear-gradient(180deg, rgba(255,255,255,1), rgba(255,255,255,0.2)); border-radius: 3px; box-shadow: 0 0 16px rgba(255,255,255,0.25); transform-origin: top; transform: scaleY(0); }
+        .step { position: relative; display: grid; grid-template-columns: 176px 1fr; align-items: start; gap: 12px; }
+    .step::after { content: attr(data-idx); position: absolute; left: 0; top: 10px; font-weight: 900; font-size: 88px; color: rgba(214,214,214,0.12); pointer-events: none; transform: translateX(-20px); }
+    .step .icon-badge { width: 64px; height: 64px; border-radius: 16px; display: grid; place-items: center; background: radial-gradient(60% 60% at 50% 30%, rgba(255,255,255,0.22), rgba(255,255,255,0.09)); border: 1px solid rgba(255,255,255,0.25); color: var(--accent); margin-left: 56px; box-shadow: 0 10px 30px rgba(255,255,255,0.15); }
+    .step .icon-badge svg { filter: drop-shadow(0 2px 8px rgba(255,255,255,0.25)); }
+        .step-card { background: linear-gradient(180deg, rgba(0, 0, 0, 0.95), rgba(35, 35, 35, 0.9)); border: 1px solid rgba(255,255,255,0.10); border-radius: 16px; padding: 22px; box-shadow: 0 18px 44px rgba(0,0,0,0.40); position: relative; }
+        .step-card h3 { margin: 0 0 8px; font-size: 22px; }
+        .step-card p { margin: 0 0 12px; color: var(--muted); }
+        .pill { display: inline-block; padding: 8px 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.06); font-weight: 700; font-size: 12px; letter-spacing: .2px; }
+        @media (max-width: 900px){
+            .timeline::before, .timeline .progress { left: 48px; }
+            .step { grid-template-columns: 120px 1fr; }
+            .step .icon-badge { margin-left: 16px; }
+        }
+
+        /* Micro hover lifts */
+        .problem-card, .stack-card, .step-card, .card, .stat { transition: transform .2s ease, box-shadow .2s ease; }
+        .problem-card:hover, .step-card:hover, .card:hover, .stat:hover { transform: translateY(-4px); box-shadow: 0 22px 60px rgba(0,0,0,0.5); }
+        .stack-card:hover:not(.interactive) { transform: scale(0.97) translateY(-2px); }
+
+        /* Immersive interactive spotlight + tilt */
+        .interactive { position: relative; will-change: transform; transform-style: preserve-3d; }
+        .interactive::before { content: ""; position: absolute; inset: -1px; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity .2s ease; mix-blend-mode: screen;
+            background: radial-gradient(220px 220px at var(--mx,50%) var(--my,50%), rgba(255,255,255,0.18), rgba(255,255,255,0)); }
+        .interactive:hover::before { opacity: 1; }
+
+        /* Final CTA section */
+        .cta-section { position: relative; padding: 120px 24px 140px; overflow: hidden; }
+        .cta-wrap { max-width: 1100px; margin: 0 auto; text-align: center; position: relative; }
+    .cta-halo { position: absolute; inset: -20% -10% auto -10%; height: 70%; pointer-events: none; background: radial-gradient(60% 60% at 50% 0%, rgba(255,255,255,0.10), rgba(255,255,255,0)); filter: blur(40px); }
+        .cta-section h2 { font-size: 40px; line-height: 1.1; margin: 0 0 10px; letter-spacing: .2px; }
+        .cta-section p.sub { color: var(--muted); margin: 0 auto 26px; font-size: 18px; max-width: 760px; }
+        .cta-stats { display: grid; grid-template-columns: 1fr; gap: 16px; max-width: 980px; margin: 26px auto 34px; }
+        @media (min-width: 860px){ .cta-stats { grid-template-columns: repeat(3, 1fr); } }
+        .stat { background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02)); border: 1px solid rgba(255,255,255,0.10); border-radius: 16px; padding: 22px; text-align: center; box-shadow: 0 18px 44px rgba(0,0,0,0.40); }
+    .stat .num { font-size: 28px; font-weight: 900; letter-spacing: .4px; margin-bottom: 6px; color: #ffffff; }
+        .stat .label { color: var(--muted); font-weight: 700; font-size: 12px; letter-spacing: .3px; text-transform: uppercase; }
+        .cta-actions { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 6px; flex-wrap: wrap; }
+        .cta-btn { display: inline-flex; align-items: center; gap: 12px; padding: 14px 22px; border-radius: 999px; font-weight: 800; letter-spacing: .2px; border: 1px solid rgba(0,0,0,0.22); color: #0b1520; cursor: pointer; text-decoration: none; box-shadow: inset 0 1px 0 rgba(255,255,255,0.65), inset 0 -1px 0 rgba(0,0,0,0.25), 0 10px 24px rgba(0, 0, 0, 0.35); background:
+            repeating-linear-gradient(90deg, rgba(255,255,255,0.06) 0px, rgba(255,255,255,0.06) 1px, rgba(0,0,0,0.05) 1px, rgba(0,0,0,0.05) 2px),
+            linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.15) 35%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.20) 65%, rgba(255,255,255,0.55) 100%),
+            linear-gradient(135deg, #f2f2f2 0%, #d1d1d1 25%, #ededed 50%, #c6c6c6 75%, #e0e0e0 100%);
+            transition: transform .15s ease, filter .15s ease, box-shadow .15s ease, background .15s ease; }
+        .cta-btn:hover { transform: translateY(-1px); filter: brightness(1.01); box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45); background: #000; color: #fff; }
+    .cta-btn .arrow { width: 26px; height: 26px; display: inline-grid; place-items: center; border-radius: 999px; font-size: 16px; background: #000000; color: #ffffff; transition: transform .18s ease, background .18s ease, color .18s ease; }
+        .cta-btn:hover .arrow { transform: translateX(4px); background: #fff; color: #000; }
+        .cta-link { color: rgba(255,255,255,0.92); text-decoration: none; font-weight: 700; padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.04); }
+        .cta-link:hover { background: rgba(255,255,255,0.08); }
+
+    .status { font-weight: 700; margin-bottom: 12px; display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 999px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.18); }
+    .status.success { color: #86efac; background: rgba(16, 60, 36, 0.35); border-color: rgba(34,197,94,0.35); }
+    .status.blocked { color: #fca5a5; background: rgba(60, 20, 20, 0.35); border-color: rgba(239,68,68,0.35); }
+    .status.warn { color: #fcd34d; background: rgba(60, 48, 16, 0.35); border-color: rgba(245,158,11,0.35); }
+
+        /* Architecture & Workflow Styles */
+        .architecture-card { background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02)); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 24px; }
+        .workflow-steps { display: flex; align-items: center; gap: 12px; overflow-x: auto; padding: 4px; }
+        .workflow-step { display: flex; flex-direction: column; align-items: center; min-width: 110px; text-align: center; }
+        .step-num { width: 40px; height: 40px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.25), rgba(255,255,255,0.1)); border: 2px solid rgba(255,255,255,0.3); display: grid; place-items: center; font-weight: 800; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(255,255,255,0.15); }
+        .step-content { font-size: 13px; }
+        .step-content strong { display: block; margin-bottom: 4px; color: var(--text); }
+        .step-content span { color: var(--muted); font-size: 11px; }
+        .workflow-arrow { font-size: 20px; color: var(--muted); margin: 0 -4px; align-self: start; padding-top: 20px; }
+
+        /* File Upload Zone */
+        .file-upload-zone { border: 2px dashed rgba(255,255,255,0.2); border-radius: 12px; padding: 32px 20px; text-align: center; transition: all 0.3s ease; background: rgba(255,255,255,0.02); cursor: pointer; }
+        .file-upload-zone:hover { border-color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.04); transform: translateY(-2px); }
+        .file-upload-zone.drag-over { border-color: #86efac; background: rgba(134, 239, 172, 0.05); }
+        .file-upload-zone.has-file { border-color: #86efac; background: rgba(134, 239, 172, 0.08); }
+        .upload-icon { font-size: 32px; margin-bottom: 8px; }
+        .upload-text { font-weight: 600; margin-bottom: 4px; }
+        .upload-formats { font-size: 12px; color: var(--muted); }
+        .upload-filename { margin-top: 12px; font-weight: 700; color: #86efac; display: none; }
+        .file-upload-zone.has-file .upload-filename { display: block; }
+        .file-upload-zone.has-file .upload-icon { display: none; }
+
+        /* Interactive Cards */
+        .interactive-card { position: relative; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .interactive-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(255,255,255,0.08); }
+
+        /* Badge */
+        .badge { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; background: rgba(255,255,255,0.1); color: var(--text); }
+
+        /* Progress Tracker */
+        .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .progress-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+        .progress-step { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 12px; border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); opacity: 0.5; transition: all 0.3s ease; }
+        .progress-step.active { opacity: 1; background: rgba(134, 239, 172, 0.1); border-color: #86efac; }
+        .progress-step.completed { opacity: 1; background: rgba(134, 239, 172, 0.05); }
+        .progress-icon { font-size: 24px; margin-bottom: 8px; }
+        .progress-label { font-size: 12px; font-weight: 600; }
+        .progress-bar-container { height: 8px; background: rgba(255,255,255,0.1); border-radius: 999px; overflow: hidden; }
+        .progress-bar { height: 100%; background: linear-gradient(90deg, #86efac, #4ade80); width: 0%; transition: width 0.5s ease; border-radius: 999px; }
+
+        /* Primary Button */
+        .primary-btn { background: linear-gradient(135deg, #86efac, #4ade80) !important; color: #000 !important; font-weight: 800; padding: 14px 28px !important; box-shadow: 0 8px 20px rgba(134, 239, 172, 0.3) !important; }
+        .primary-btn:hover { box-shadow: 0 12px 28px rgba(134, 239, 172, 0.4) !important; }
+
+        /* Results */
+        .results-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .result-stat { position: relative; overflow: hidden; }
+        .stat-icon { font-size: 32px; margin-bottom: 8px; }
+        .stat-desc { font-size: 11px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .technical-details summary:hover { background: rgba(255,255,255,0.05); }
+
+        /* Select */
+        .select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' d='M6 9L1 4h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
+
+        /* Responsive Grid */
+        .responsive-grid { grid-template-columns: 1fr 1fr; }
+        @media (max-width: 900px) {
+            .responsive-grid { grid-template-columns: 1fr; }
+            .workflow-steps { flex-direction: column; }
+            .workflow-arrow { transform: rotate(90deg); margin: -4px 0; padding: 0; }
+            .progress-steps { grid-template-columns: 1fr 1fr; }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .footer { text-align: center; color: var(--muted); padding: 48px 20px; border-top: 1px solid var(--border); }
+
+        /* Ultra-light custom cursor dot (no lag) */
+        .cursor-dot {
+            position: fixed;
+            left: 0; top: 0;
+            width: 10px; height: 10px;
+            background: #ffffff; /* solid white */
+            border-radius: 50%;
+            pointer-events: none; /* never block clicks */
+            z-index: 9999;
+            opacity: 1;
+            transform: translate3d(-100px, -100px, 0); /* off-screen until first move */
+            will-change: transform; /* hint GPU accel */
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="nav">
+        <div class="nav-left">
+            <div class="brand"><img class="logo" src="{{ url_for('static', filename='llm.png') }}" alt="LLM Logo" /></div>
+            <div class="links">
+                <a href="/#hero">Home</a>
+                <a href="/#features">Features</a>
+                <a href="/#how">How It Works</a>
+            </div>
+        </div>
+        <a class="btn-try" href="{{ url_for('home') }}#demo" aria-label="Try Guardial now"><span>Try now</span><span class="arrow">→</span></a>
+    </nav>
+
+    <main>
+        <!-- Model Forge Section -->
+        <section class="section" id="forge">
+            <h2>🔨 Model Forge</h2>
+            <p class="lead">Fine-tune your own models and integrate them seamlessly into the <strong>unlearning pipeline</strong>.</p>
+            
+            <!-- Architecture Diagram -->
+            <div class="architecture-card" style="margin-bottom: 32px;">
+                <h3 style="margin: 0 0 20px; font-size: 20px;">⚙️ Fine-Tuning Pipeline</h3>
+                <div class="workflow-steps">
+                    <div class="workflow-step">
+                        <div class="step-num">1</div>
+                        <div class="step-content">
+                            <strong>Upload Dataset</strong>
+                            <span>Training data</span>
+                        </div>
+                    </div>
+                    <div class="workflow-arrow">→</div>
+                    <div class="workflow-step">
+                        <div class="step-num">2</div>
+                        <div class="step-content">
+                            <strong>Load Base Model</strong>
+                            <span>distilgpt2</span>
+                        </div>
+                    </div>
+                    <div class="workflow-arrow">→</div>
+                    <div class="workflow-step">
+                        <div class="step-num">3</div>
+                        <div class="step-content">
+                            <strong>Fine-Tune</strong>
+                            <span>Custom parameters</span>
+                        </div>
+                    </div>
+                    <div class="workflow-arrow">→</div>
+                    <div class="workflow-step">
+                        <div class="step-num">4</div>
+                        <div class="step-content">
+                            <strong>Save Model</strong>
+                            <span>./forged_model</span>
+                        </div>
+                    </div>
+                    <div class="workflow-arrow">→</div>
+                    <div class="workflow-step">
+                        <div class="step-num">5</div>
+                        <div class="step-content">
+                            <strong>Auto-Available</strong>
+                            <span>For unlearning</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Integration Highlight -->
+                <div style="margin-top: 24px; padding: 20px; background: rgba(134, 239, 172, 0.08); border: 1px solid rgba(134, 239, 172, 0.2); border-radius: 12px;">
+                    <h4 style="margin: 0 0 12px; font-size: 16px; display: flex; align-items: center; gap: 8px; color: #86efac;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                            <polyline points="22 4 12 14.01 9 11.01"/>
+                        </svg>
+                        Seamless Integration
+                    </h4>
+                    <p style="margin: 0; color: var(--muted); font-size: 14px;">
+                        Models forged here are automatically detected by the <strong>Unlearning Engine</strong>. 
+                        No manual configuration needed - just forge and unlearn!
+                    </p>
+                </div>
+
+                <div style="margin-top: 20px; padding: 16px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px;">
+                        <div>
+                            <div style="font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Base Model</div>
+                            <div style="font-weight: 700;">distilgpt2</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Output Path</div>
+                            <div style="font-weight: 700; font-family: monospace; font-size: 13px;">./forged_model</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Optimization</div>
+                            <div style="font-weight: 700;">FP16, Batch=4</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Tracking</div>
+                            <div style="font-weight: 700;">Loss + Metadata</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="workbench">
+                <div class="wb-header">
+                    <div class="wb-title">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                            <polyline points="2 17 12 22 22 17"/>
+                            <polyline points="2 12 12 17 22 12"/>
+                        </svg>
+                        Fine-Tuning Workbench
+                    </div>
+                </div>
+                <div class="wb-body">
+                    <form id="forgeForm">
+                        <div class="grid two responsive-grid">
+                            <div class="card interactive-card">
+                                <div class="label-row">
+                                    <label for="dataset">📄 Fine-tuning Dataset</label>
+                                    <span class="badge">Required</span>
+                                </div>
+                                <div class="file-upload-zone" id="forgeUploadZone">
+                                    <input type="file" id="dataset" name="dataset" accept=".json, .csv" required style="display: none;">
+                                    <div class="upload-icon">📤</div>
+                                    <div class="upload-text">Click to upload or drag & drop</div>
+                                    <div class="upload-formats">CSV or JSON with 'text' column</div>
+                                    <div class="upload-filename" style="display: none;"></div>
+                                </div>
+                                <p class="hint">Upload training data to customize the model for your domain.</p>
+                            </div>
+
+                            <div class="card interactive-card">
+                                <h4 style="margin: 0 0 16px; font-size: 16px;">⚙️ Training Parameters</h4>
+                                
+                                <div style="margin-bottom: 16px;">
+                                    <label for="epochs">Epochs</label>
+                                    <div style="display: flex; gap: 12px; align-items: center;">
+                                        <input type="range" id="epochs" name="epochs" min="1" max="5" value="2" style="flex: 1;">
+                                        <span id="epochsValue" style="font-weight: 700; min-width: 30px;">2</span>
+                                    </div>
+                                    <p class="hint" style="margin-top: 4px;">More epochs = better adaptation but longer training</p>
+                                </div>
+
+                                <div>
+                                    <label for="learningRate">Learning Rate</label>
+                                    <select id="learningRate" name="learningRate" class="select" style="width: 100%; padding: 12px; background: rgba(255,255,255,0.04); color: #fff; border: 1px solid rgba(255,255,255,0.16); border-radius: 10px;">
+                                        <option value="1e-5">1e-5 (Conservative)</option>
+                                        <option value="5e-5" selected>5e-5 (Balanced)</option>
+                                        <option value="1e-4">1e-4 (Aggressive)</option>
+                                    </select>
+                                    <p class="hint" style="margin-top: 4px;">Higher rate = faster learning but risk of instability</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Progress Tracker -->
+                        <div id="forgeProgress" style="display: none; margin-top: 24px;">
+                            <div class="progress-header">
+                                <h4 style="margin: 0; font-size: 16px;">⚙️ Training in Progress...</h4>
+                                <span id="trainingTime" style="color: var(--muted); font-size: 14px;">This may take a few minutes</span>
+                            </div>
+                            <div class="progress-steps" style="margin-top: 16px;">
+                                <div class="progress-step" data-step="1">
+                                    <div class="progress-icon">📦</div>
+                                    <div class="progress-label">Loading Data</div>
+                                </div>
+                                <div class="progress-step" data-step="2">
+                                    <div class="progress-icon">🤖</div>
+                                    <div class="progress-label">Loading Model</div>
+                                </div>
+                                <div class="progress-step" data-step="3">
+                                    <div class="progress-icon">🎓</div>
+                                    <div class="progress-label">Fine-Tuning</div>
+                                </div>
+                                <div class="progress-step" data-step="4">
+                                    <div class="progress-icon">💾</div>
+                                    <div class="progress-label">Saving</div>
+                                </div>
+                            </div>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar" id="forgeProgressBar"></div>
+                            </div>
+                        </div>
+
+                        <div style="text-align: center; margin-top: 24px;">
+                            <button type="submit" id="tuneBtn" class="primary-btn"><span class="btn-label">🔨 Start Fine-Tuning</span><span class="spinner"></span></button>
+                        </div>
+                    </form>
+                    
+                    <div id="forgeResults" style="margin-top: 32px; display: none;">
+                        <div class="results-header">
+                            <h3 style="margin: 0; font-size: 20px;">✅ Fine-Tuning Complete</h3>
+                            <div class="status success">Ready for Unlearning</div>
+                        </div>
+
+                        <div class="card" style="margin-top: 20px; background: rgba(134, 239, 172, 0.05); border-color: rgba(134, 239, 172, 0.2);">
+                            <h4 style="margin: 0 0 16px; font-size: 16px;">📈 Training Loss Curve</h4>
+                            <canvas id="lossChart" style="max-height: 300px;"></canvas>
+                        </div>
+
+                        <div class="technical-details" style="margin-top: 20px;">
+                            <details open>
+                                <summary style="cursor: pointer; font-weight: 700; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 8px;">📋 Model Metadata</summary>
+                                <div style="padding: 16px; margin-top: 8px; background: rgba(0,0,0,0.3); border-radius: 8px; font-family: monospace; font-size: 13px;">
+                                    <div style="display: grid; gap: 8px;">
+                                        <div><span style="color: var(--muted);">Model Path:</span> <span id="modelPath">./forged_model</span></div>
+                                        <div><span style="color: var(--muted);">Final Loss:</span> <span id="finalLoss" style="color: #86efac;">--</span></div>
+                                        <div><span style="color: var(--muted);">Dataset Samples:</span> <span id="datasetSamples">--</span></div>
+                                        <div><span style="color: var(--muted);">Training Blocks:</span> <span id="trainingBlocks">--</span></div>
+                                        <div><span style="color: var(--muted);">Status:</span> <span style="color: #86efac;">✓ Available for Unlearning</span></div>
+                                    </div>
+                                </div>
+                            </details>
+                        </div>
+
+                        <div style="margin-top: 20px; padding: 16px; background: rgba(134, 239, 172, 0.08); border: 1px solid rgba(134, 239, 172, 0.2); border-radius: 12px; text-align: center;">
+                            <p style="margin: 0; color: #86efac; font-weight: 700;">🎉 Your forged model is ready!</p>
+                            <p style="margin: 8px 0 0; color: var(--muted); font-size: 14px;">
+                                Head to <a href="/unlearning" style="color: #86efac; text-decoration: underline;">LLM Unlearning</a> to use this model.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">© <span id="year"></span> Guardial</footer>
+    
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.2/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.2/dist/ScrollTrigger.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Footer year
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initNavShrink();
+            initCustomCursor();
+            initFileUpload();
+            initParameterControls();
+
+            const form = document.getElementById('forgeForm');
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btn = document.getElementById('tuneBtn');
+                const resultsDiv = document.getElementById('forgeResults');
+                const forgeProgress = document.getElementById('forgeProgress');
+                
+                forgeProgress.style.display = 'block';
+                resultsDiv.style.display = 'none';
+                
+                btn.classList.add('loading');
+                btn.disabled = true;
+
+                const formData = new FormData(form);
+                
+                // Add custom parameters
+                const epochs = document.getElementById('epochs').value;
+                const learningRate = document.getElementById('learningRate').value;
+                formData.append('epochs', epochs);
+                formData.append('learning_rate', learningRate);
+
+                // Simulate progress
+                simulateForgeProgress();
+
+                try {
+                    const response = await fetch('/api/forge/tune', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        // Mark all steps as completed
+                        document.querySelectorAll('#forgeProgress .progress-step').forEach(step => {
+                            step.classList.add('completed');
+                            step.classList.remove('active');
+                        });
+                        document.getElementById('forgeProgressBar').style.width = '100%';
+
+                        // Show results after delay
+                        setTimeout(() => {
+                            forgeProgress.style.display = 'none';
+                            resultsDiv.style.display = 'block';
+                            
+                            // Update metadata
+                            document.getElementById('modelPath').textContent = data.model_path || './forged_model';
+                            document.getElementById('finalLoss').textContent = data.final_loss ? data.final_loss.toFixed(4) : '--';
+                            document.getElementById('datasetSamples').textContent = data.dataset_samples || '--';
+                            document.getElementById('trainingBlocks').textContent = data.training_blocks || '--';
+                            
+                            // Render loss chart
+                            renderLossChart(data.loss_data);
+                        }, 1000);
+                    } else {
+                        forgeProgress.style.display = 'none';
+                        alert('Error: ' + data.error);
+                    }
+                } catch (error) {
+                    forgeProgress.style.display = 'none';
+                    alert('An error occurred: ' + error.message);
+                } finally {
+                    btn.classList.remove('loading');
+                    btn.disabled = false;
+                }
+            });
+        });
+
+        function initFileUpload() {
+            const uploadZone = document.getElementById('forgeUploadZone');
+            const fileInput = document.getElementById('dataset');
+            const filenameDisplay = uploadZone.querySelector('.upload-filename');
+
+            uploadZone.addEventListener('click', () => fileInput.click());
+
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    const file = e.target.files[0];
+                    filenameDisplay.textContent = '✓ ' + file.name;
+                    uploadZone.classList.add('has-file');
+                }
+            });
+
+            // Drag and drop
+            uploadZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadZone.classList.add('drag-over');
+            });
+
+            uploadZone.addEventListener('dragleave', () => {
+                uploadZone.classList.remove('drag-over');
+            });
+
+            uploadZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadZone.classList.remove('drag-over');
+                
+                if (e.dataTransfer.files.length > 0) {
+                    fileInput.files = e.dataTransfer.files;
+                    const file = e.dataTransfer.files[0];
+                    filenameDisplay.textContent = '✓ ' + file.name;
+                    uploadZone.classList.add('has-file');
+                }
+            });
+        }
+
+        function initParameterControls() {
+            const epochsSlider = document.getElementById('epochs');
+            const epochsValue = document.getElementById('epochsValue');
+
+            epochsSlider.addEventListener('input', (e) => {
+                epochsValue.textContent = e.target.value;
+            });
+        }
+
+        function simulateForgeProgress() {
+            const steps = [
+                { step: 1, time: 2000, progress: 10 },
+                { step: 2, time: 3000, progress: 25 },
+                { step: 3, time: 20000, progress: 90 },
+                { step: 4, time: 3000, progress: 95 }
+            ];
+
+            let currentTime = 0;
+            steps.forEach(({ step, time, progress }) => {
+                setTimeout(() => {
+                    document.querySelectorAll('#forgeProgress .progress-step').forEach(s => s.classList.remove('active'));
+                    const stepEl = document.querySelector(`#forgeProgress .progress-step[data-step="${step}"]`);
+                    if (stepEl) {
+                        stepEl.classList.add('active');
+                        if (step > 1) {
+                            document.querySelector(`#forgeProgress .progress-step[data-step="${step - 1}"]`).classList.add('completed');
+                        }
+                    }
+                    document.getElementById('forgeProgressBar').style.width = progress + '%';
+                }, currentTime);
+                currentTime += time;
+            });
+        }
+
+        function renderLossChart(lossData) {
+            // Handle both old format (array) and new format (object with values/steps)
+            const values = Array.isArray(lossData) ? lossData : (lossData.values || []);
+            const steps = lossData.steps || values.map((_, i) => i + 1);
+            
+            if (values.length === 0) {
+                console.warn('No loss data to display');
+                return;
+            }
+
+            const ctx = document.getElementById('lossChart').getContext('2d');
+            
+            // Destroy existing chart if it exists
+            const existingChart = Chart.getChart(ctx);
+            if (existingChart) {
+                existingChart.destroy();
+            }
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: steps.map(s => `Step ${s}`),
+                    datasets: [{
+                        label: 'Training Loss',
+                        data: values,
+                        borderColor: 'rgba(255, 255, 255, 0.8)',
+                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: 'rgba(255, 255, 255, 0.9)'
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Training Steps',
+                                color: 'rgba(255, 255, 255, 0.8)'
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.7)'
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        },
+                        y: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Loss',
+                                color: 'rgba(255, 255, 255, 0.8)'
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.7)'
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function initNavShrink(){
+            const nav = document.querySelector('.nav');
+            if (!nav) return;
+            const apply = () => {
+                const y = window.scrollY || window.pageYOffset;
+                const threshold = 24;
+                if (y > threshold) nav.classList.add('shrink');
+                else nav.classList.remove('shrink');
+            };
+            apply();
+            window.addEventListener('scroll', apply, {passive:true});
+        }
+
+        function initCustomCursor(){
+            const isCoarse = window.matchMedia('(pointer: coarse)').matches;
+            if (isCoarse) return;
+            const dot = document.createElement('div');
+            dot.className = 'cursor-dot';
+            document.body.appendChild(dot);
+
+            const radius = 5;
+            let x = -100, y = -100;
+
+            const onMove = (e) => { x = e.clientX; y = e.clientY; };
+            window.addEventListener('mousemove', onMove, {passive:true});
+            window.addEventListener('mouseleave', () => { dot.style.opacity = '0'; });
+            window.addEventListener('mouseenter', () => { dot.style.opacity = '1'; });
+
+            const render = () => {
+                dot.style.transform = `translate3d(${x - radius}px, ${y - radius}px, 0)`;
+                requestAnimationFrame(render);
+            };
+            requestAnimationFrame(render);
+        }
+    </script>
+</body>
+</html>

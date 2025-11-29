@@ -1,0 +1,53 @@
+{
+  "enabled_detectors": {
+    "harmful_content": {
+      "enabled": true,
+      "threshold": 0.6,
+      "action": "block",
+      "strategy": "llm",
+      "llm": {
+        "model": "gemini-2.5-flash"
+      }
+    },
+    "pii_redaction": {
+      "enabled": true,
+      "entity_types": ["PERSON", "GPE", "ORG"],
+      "action": "redact",
+      "strategy": "llm",
+      "llm": {
+        "model": "gemini-2.5-flash"
+      }
+    },
+    "prompt_injection": {
+      "enabled": true,
+      "action": "block",
+      "strategy": "llm",
+      "llm": {
+        "model": "gemini-2.5-flash"
+      }
+    }
+  },
+  "response_screening": {
+    "enabled": true,
+    "detectors": {
+      "harmful_content": {
+        "enabled": true,
+        "threshold": 0.7,
+        "action": "block",
+        "strategy": "llm",
+        "llm": {
+          "model": "gemini-2.5-flash"
+        }
+      },
+      "pii_redaction": {
+        "enabled": true,
+        "entity_types": ["PERSON"],
+        "action": "redact",
+        "strategy": "llm",
+        "llm": {
+          "model": "gemini-2.5-flash"
+        }
+      }
+    }
+  }
+}
