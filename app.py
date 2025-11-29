@@ -9,17 +9,18 @@ import re
 import pandas as pd
 import time
 import sys
-from werkzeug.utils import secure_filename
 
 # Runtime check for Python 3.13 compatibility
 if sys.version_info >= (3, 13):
     print("WARNING: Python 3.13+ detected. Some features (torch/transformers) may not work correctly.")
     print("Recommended: Python 3.10 or 3.11.")
 
+from werkzeug.utils import secure_filename
+
 # Load environment variables from .env file
 load_dotenv()
 
-# Configure the API key
+# Configure the API key (you'll need to set this as an environment variable)
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
 # Serve assets from templates/public at /public and keep templates working
@@ -44,7 +45,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Import vector_db for Hallucination Auditor
+# Import vector_db for Hallucination Auditor (uses ChromaDB built-in embeddings)
 try:
     import vector_db
     AUDITOR_AVAILABLE = True
@@ -57,29 +58,7 @@ except Exception as e:
     logger.error(f"Vector DB module failed to load: {str(e)[:200]}")
     logger.error("Hallucination Auditor features unavailable. Install with: pip install chromadb")
 
-# Lazy import for Unlearning Engine
-UNLEARNING_AVAILABLE = False
-run_unlearning = None
-generate_text = None
-
-def _load_unlearner():
-    global UNLEARNING_AVAILABLE, run_unlearning, generate_text
-    if run_unlearning is None:
-        try:
-            from unlearner import run_unlearning as _run_unlearning, generate_text as _generate_text
-            run_unlearning = _run_unlearning
-            generate_text = _generate_text
-            UNLEARNING_AVAILABLE = True
-            logger.info("Unlearner module loaded successfully - Unlearning Engine available")
-            return True
-        except Exception as e:
-            logger.error(f"Unlearner module failed: {str(e)[:200]}")
-            logger.error("Unlearning unavailable (Python 3.13 has compatibility issues with transformers/torch)")
-            UNLEARNING_AVAILABLE = False
-            return False
-    return UNLEARNING_AVAILABLE
-
-# Lazy import for Model Forge
+# Lazy import for Model Forge (uses transformers + torch which have Python 3.13 compatibility issues)
 FORGE_AVAILABLE = False
 run_fine_tuning = None
 
@@ -99,8 +78,426 @@ def _load_fine_tuner():
             return False
     return FORGE_AVAILABLE
 
+# Lazy import for Unlearning Engine (uses transformers + torch + peft)
+UNLEARNING_AVAILABLE = False
+run_unlearning = None
+
+def _load_unlearner():
+    global UNLEARNING_AVAILABLE, run_unlearning
+    if run_unlearning is None:
+        try:
+            from unlearner import run_unlearning as _run_unlearning
+            run_unlearning = _run_unlearning
+            UNLEARNING_AVAILABLE = True
+            logger.info("Unlearner module loaded successfully - Unlearning Engine available")
+            return True
+        except Exception as e:
+            logger.error(f"Unlearner module failed: {str(e)[:200]}")
+            logger.error("Unlearning unavailable (Python 3.13 has compatibility issues with transformers/torch)")
+            UNLEARNING_AVAILABLE = False
+            return False
+    return UNLEARNING_AVAILABLE
+
+# Note: Fine tuner and unlearner will be loaded on-demand when their endpoints are accessed
+logger.info("Fine tuner and unlearner will be loaded on-demand (deferred due to potential Python 3.13 compatibility issues)")
+
+from detectors import (
+    load_models,
+    detect_harmful_content,
+    redact_pii,
+    detect_prompt_injection,
+)
+
+# Load policy (externalized configuration)
+policy = {}
+try:
+    with open('policy.json', 'r') as f:
+        policy = json.load(f)
+    logger.info("Policy loaded successfully.")
+except FileNotFoundError:
+    logger.warning("policy.json not found. Using default empty policy.")
+
+# Load models once at startup
+load_models()
+
+
+def log_event(event_type: str,
+              detector: str | None = None,
+              status: str | None = None,
+              reason: str | None = None,
+              original_prompt: str | None = None,
+              processed_prompt: str | None = None,
+              llm_response: str | None = None,
+              metadata: dict | None = None):
+    """Emit a structured JSON event to the log for easy parsing by /api/logs."""
+    evt = {
+        "ts": datetime.utcnow().isoformat() + "Z",
+        "event": event_type,
+        "detector": detector,
+        "status": status,
+        "reason": reason,
+        "original_prompt": original_prompt,
+        "processed_prompt": processed_prompt,
+        # Avoid overly large payloads in logs
+        "llm_response_preview": (llm_response[:200] + ("…" if llm_response and len(llm_response) > 200 else "")) if llm_response else None,
+        "metadata": metadata or {},
+    }
+    try:
+        logger.info("EVENT_JSON " + json.dumps(evt, ensure_ascii=False))
+    except Exception as e:
+        logger.error(f"Failed to log structured event: {e}")
+
+@app.route('/')
+def home():
+    # Make Spline embed the default landing page
+    return render_template('test.html')
+
+@app.route('/demo')
+def demo():
+    # Redirect legacy demo route to the demo section on the main page
+    return redirect(url_for('home') + '#demo')
+
+@app.route('/features')
+def features():
+    # Redirect legacy features route to the features section on the main page
+    return redirect(url_for('home') + '#features')
+
+
+@app.route('/test')
+def test_page():
+    # Consolidate to main homepage
+    return redirect(url_for('home'))
+
+
+@app.route('/unlearning')
+def unlearning_page():
+    """Renders the LLM Unlearning page."""
+    return render_template('unlearning.html')
+
+
+@app.route('/auditor')
+def auditor_page():
+    """Renders the Hallucination Auditor page."""
+    return render_template('auditor.html')
+
+
+@app.route('/api/auditor/status', methods=['GET'])
+def api_auditor_status():
+    """Check if the Hallucination Auditor is available."""
+    return jsonify({
+        "available": AUDITOR_AVAILABLE,
+        "message": "Hallucination Auditor is ready" if AUDITOR_AVAILABLE else "Hallucination Auditor is not available on this deployment"
+    })
+
+
+@app.route('/forge')
+def forge_page():
+    """Renders the Model Forge page."""
+    return render_template('forge.html')
+
+
+@app.route('/public/<path:filename>')
+def public_assets(filename):
+    """Serve assets from templates/public to use as a lightweight public folder."""
+    assets_dir = os.path.join(app.root_path, 'templates', 'public')
+    return send_from_directory(assets_dir, filename)
+
+@app.route('/shield_prompt', methods=['POST'])
+def shield_prompt():
+    try:
+        data = request.json
+        if not data or 'prompt' not in data:
+            return jsonify({"error": "Please provide a 'prompt' in the request body."}), 400
+
+        user_prompt = data['prompt']
+        logger.info(f"Received prompt: {user_prompt}")
+
+        trace = []
+        # --- Shielding Logic ---
+        # Load per-detector policies with safe defaults
+        detector_policies = (policy or {}).get("enabled_detectors", {})
+        harmful_policy = detector_policies.get("harmful_content", {"enabled": True, "threshold": 0.5})
+        pii_policy = detector_policies.get("pii_redaction", {"enabled": True})
+        injection_policy = detector_policies.get("prompt_injection", {"enabled": True})
+
+        # 1. Harmful Content Check
+        is_harmful, harmful_reason = detect_harmful_content(user_prompt, harmful_policy)
+        trace.append({
+            "step": "harmful_content",
+            "strategy": harmful_policy.get("strategy", "ml"),
+            "decision": "block" if is_harmful else "allow",
+            "reason": harmful_reason
+        })
+        if is_harmful:
+            log_event(
+                event_type="BLOCK",
+                detector="harmful_content",
+                status="blocked",
+                reason=harmful_reason,
+                original_prompt=user_prompt,
+            )
+            return jsonify({
+                "status": "blocked",
+                "reason": harmful_reason,
+                "original_prompt": user_prompt,
+                "trace": trace
+            }), 403
+        
+        # 2. Prompt Injection / Jailbreak Heuristics
+        is_injection, injection_reason = detect_prompt_injection(user_prompt, injection_policy)
+        trace.append({
+            "step": "prompt_injection",
+            "strategy": injection_policy.get("strategy", "heuristic"),
+            "decision": "block" if is_injection else "allow",
+            "reason": injection_reason
+        })
+        if is_injection:
+            log_event(
+                event_type="BLOCK",
+                detector="prompt_injection",
+                status="blocked",
+                reason=injection_reason,
+                original_prompt=user_prompt,
+            )
+            return jsonify({
+                "status": "blocked",
+                "reason": injection_reason,
+                "original_prompt": user_prompt,
+                "trace": trace
+            }), 403
+
+        # 3. Advanced PII Detection and Redaction (spaCy NER)
+        processed_prompt, pii_redacted = redact_pii(user_prompt, pii_policy)
+        if pii_redacted:
+            logger.info(f"Prompt after PII redaction: {processed_prompt}")
+            log_event(
+                event_type="REDACT",
+                detector="pii_redaction",
+                status="redacted",
+                original_prompt=user_prompt,
+                processed_prompt=processed_prompt,
+            )
+        trace.append({
+            "step": "pii_redaction",
+            "strategy": pii_policy.get("strategy", "ml"),
+            "decision": "redacted" if pii_redacted else "unchanged",
+            "meta": {"entity_types": pii_policy.get("entity_types")}
+        })
+        
+        # --- Generate LLM response using Google Gemini ---
+        try:
+            model = genai.GenerativeModel('gemini-2.5-flash')
+            response = model.generate_content(processed_prompt)
+            llm_response = response.text
+            trace.append({
+                "step": "llm_generation",
+                "model": "gemini-2.5-flash",
+                "decision": "ok",
+            })
+        except Exception as e:
+            llm_response = f"Error communicating with LLM: {str(e)}"
+            logger.error(f"LLM Error: {e}")
+            trace.append({
+                "step": "llm_generation",
+                "model": "gemini-2.5-flash",
+                "decision": "error",
+                "reason": str(e)
+            })
+
+        # Optional: Screen the LLM's response too
+        response_policy = (policy or {}).get("response_screening", {})
+        # Ensure we always have a final response variable
+        final_llm_response = llm_response
+        if response_policy.get("enabled", False):
+            resp_det = response_policy.get("detectors", {})
+            # Harmful content in response
+            resp_harmful, resp_reason = detect_harmful_content(llm_response, resp_det.get("harmful_content", {"enabled": False}))
+            trace.append({
+                "step": "response_harmful_content",
+                "strategy": (resp_det.get("harmful_content") or {}).get("strategy", "ml"),
+                "decision": "block" if resp_harmful else "allow",
+                "reason": resp_reason
+            })
+            if resp_harmful:
+                log_event(
+                    event_type="BLOCK",
+                    detector="response_harmful_content",
+                    status="blocked_response",
+                    reason=resp_reason,
+                    original_prompt=user_prompt,
+                    processed_prompt=processed_prompt,
+                    llm_response=llm_response,
+                )
+                return jsonify({
+                    "status": "blocked_response",
+                    "reason": resp_reason,
+                    "original_prompt": user_prompt,
+                    "llm_output_blocked": llm_response,
+                    "trace": trace
+                }), 403
+
+            # PII in response
+            final_llm_response, response_pii_redacted = redact_pii(llm_response, resp_det.get("pii_redaction", {"enabled": False}))
+            if response_pii_redacted:
+                logger.info(f"LLM response after PII redaction: {final_llm_response}")
+                log_event(
+                    event_type="REDACT",
+                    detector="response_pii_redaction",
+                    status="redacted_response",
+                    original_prompt=user_prompt,
+                    processed_prompt=processed_prompt,
+                    llm_response=final_llm_response,
+                )
+            trace.append({
+                "step": "response_pii_redaction",
+                "strategy": (resp_det.get("pii_redaction") or {}).get("strategy", "ml"),
+                "decision": "redacted" if response_pii_redacted else "unchanged"
+            })
+        else:
+            final_llm_response = llm_response
+
+        log_event(
+            event_type="SUCCESS",
+            detector=None,
+            status="success",
+            original_prompt=user_prompt,
+            processed_prompt=processed_prompt,
+            llm_response=final_llm_response,
+        )
+        return jsonify({
+            "status": "success",
+            "original_prompt": user_prompt,
+            "processed_prompt": processed_prompt,
+            "llm_response": final_llm_response,
+            "trace": trace
+        })
+    except Exception as e:
+        logger.exception(f"Unhandled error in /shield_prompt: {e}")
+        return jsonify({
+            "status": "error",
+            "error": "Internal error while processing prompt.",
+            "reason": str(e)
+        }), 500
+
+
+@app.route('/api/policy', methods=['GET'])
+def get_policy():
+    """Return the currently loaded policy JSON."""
+    try:
+        return jsonify(policy)
+    except Exception as e:
+        logger.error(f"Failed to return policy: {e}")
+        return jsonify({"error": "Failed to load policy."}), 500
+
+
+@app.route('/api/logs', methods=['GET'])
+def get_logs():
+    """Return recent structured events parsed from prompt_shield.log.
+
+    Query params:
+      - limit: number of recent lines to scan from the end of the file (default 500)
+    """
+    log_path = os.path.join(os.getcwd(), "prompt_shield.log")
+    limit = request.args.get("limit", default=500, type=int)
+    events = []
+    try:
+        with open(log_path, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+        # Look back over the last N lines for EVENT_JSON entries
+        for line in lines[-limit:]:
+            idx = line.find("EVENT_JSON ")
+            if idx != -1:
+                payload = line[idx + len("EVENT_JSON "):].strip()
+                try:
+                    evt = json.loads(payload)
+                    events.append(evt)
+                except json.JSONDecodeError:
+                    # ignore malformed structured events
+                    continue
+    except FileNotFoundError:
+        logger.warning("prompt_shield.log not found when fetching logs.")
+    except Exception as e:
+        logger.error(f"Failed to read logs: {e}")
+        return jsonify({"error": "Failed to read logs."}), 500
+
+    return jsonify({"events": events})
+
+
+import pandas as pd
+from werkzeug.utils import secure_filename
+# vector_db import removed - using module-level variable set at startup
+
+# --- Obliviate Feature APIs ---
+
+import random
+
+
+
+@app.route('/api/unlearn', methods=['POST'])
+def api_unlearn():
+    """Performs unlearning on a model."""
+    # Lazy load unlearner
+    if not _load_unlearner():
+        return jsonify({"error": "Unlearning Engine is not available. This feature requires Python 3.11 or compatible transformers/torch versions."}), 503
+    
+    if 'training_set' not in request.files or 'forget_set' not in request.files:
+        return jsonify({"error": "Missing training or forget set file."}), 400
+    
+    training_file = request.files['training_set']
+    forget_file = request.files['forget_set']
+    info_to_forget = request.form.get('info_to_forget')
+
+    if training_file.filename == '' or forget_file.filename == '' or not info_to_forget:
+        return jsonify({"error": "Missing forget_set, training_set, or info_to_forget."}), 400
+
+    training_path, forget_path = None, None
+    try:
+        # Save files temporarily
+        training_filename = secure_filename(training_file.filename)
+        training_path = os.path.join("uploads", training_filename)
+        training_file.save(training_path)
+
+        forget_filename = secure_filename(forget_file.filename)
+        forget_path = os.path.join("uploads", forget_filename)
+        forget_file.save(forget_path)
+
+        # Determine model path
+        model_path = "./forged_model"
+        if not os.path.exists(model_path):
+            model_path = "distilgpt2"
+        
+        logger.info(f"Starting unlearning for '{info_to_forget}' using model '{model_path}'")
+
+        metrics = run_unlearning(
+            model_path=model_path,
+            forget_set_path=forget_path,
+            info_to_forget=info_to_forget
+        )
+
+        logger.info("Unlearning process complete.")
+
+        # Clean up temporary files
+        os.remove(training_path)
+        os.remove(forget_path)
+
+        return jsonify({
+            "status": "success",
+            "retain_accuracy": metrics.get("retain_accuracy"),
+            "forget_accuracy": metrics.get("forget_accuracy")
+        })
+
+    except Exception as e:
+        logger.error(f"Error in /api/unlearn: {e}")
+        # Clean up in case of error
+        if training_path and os.path.exists(training_path):
+            os.remove(training_path)
+        if forget_path and os.path.exists(forget_path):
+            os.remove(forget_path)
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/api/auditor/upload', methods=['POST'])
 def api_auditor_upload():
+    """Handles dataset upload for the Hallucination Auditor."""
     if not AUDITOR_AVAILABLE:
         return jsonify({"error": "Hallucination Auditor is not available. Please use Python 3.11 or install required dependencies."}), 503
     
@@ -249,6 +646,10 @@ def api_auditor_threshold():
             }), 400
 
 
+import time
+
+
+
 @app.route('/api/forge/tune', methods=['POST'])
 def api_forge_tune():
     """Fine-tunes a model using the provided dataset with enhanced tracking."""
@@ -357,94 +758,6 @@ def api_models_list():
         
     except Exception as e:
         logger.error(f"Error listing models: {e}")
-        return jsonify({"error": str(e)}), 500
-
-
-@app.route('/unlearning')
-def unlearning_page():
-    return render_template('unlearning.html')
-
-
-@app.route('/api/unlearn', methods=['POST'])
-def api_unlearn():
-    """Handles the unlearning process."""
-    if not _load_unlearner():
-        return jsonify({"error": "Unlearning Engine is not available. Please use Python 3.10/3.11."}), 503
-
-    try:
-        # Check for required files
-        if 'training_set' not in request.files or 'forget_set' not in request.files:
-            return jsonify({"error": "Missing training_set or forget_set file."}), 400
-        
-        training_file = request.files['training_set']
-        forget_file = request.files['forget_set']
-        info_to_forget = request.form.get('info_to_forget')
-
-        if not info_to_forget:
-            return jsonify({"error": "Missing info_to_forget."}), 400
-
-        # Save files temporarily
-        os.makedirs("uploads", exist_ok=True)
-        training_path = os.path.join("uploads", secure_filename(training_file.filename))
-        forget_path = os.path.join("uploads", secure_filename(forget_file.filename))
-        
-        training_file.save(training_path)
-        forget_file.save(forget_path)
-
-        # Determine model path (use forged model if available, else base)
-        model_path = "./forged_model" if os.path.exists("./forged_model") else "distilgpt2"
-        
-        # Run unlearning
-        results = run_unlearning(
-            model_path=model_path,
-            forget_set_path=forget_path,
-            info_to_forget=info_to_forget
-        )
-
-        # Cleanup
-        if os.path.exists(training_path): os.remove(training_path)
-        if os.path.exists(forget_path): os.remove(forget_path)
-
-        return jsonify(results)
-
-    except Exception as e:
-        logger.error(f"Error in /api/unlearn: {e}")
-        return jsonify({"error": str(e)}), 500
-
-
-@app.route('/api/query_model', methods=['POST'])
-def api_query_model():
-    """Queries a specific model (base/forged or unlearned)."""
-    if not _load_unlearner():
-        return jsonify({"error": "Unlearning Engine is not available."}), 503
-
-    data = request.json
-    if not data or 'prompt' not in data:
-        return jsonify({"error": "Missing prompt."}), 400
-    
-    prompt = data['prompt']
-    model_type = data.get('model_type', 'base') # 'base' or 'unlearned'
-    
-    try:
-        # Determine model path
-        if model_type == 'unlearned':
-            model_path = "./unlearned_model"
-            if not os.path.exists(model_path):
-                return jsonify({"error": "Unlearned model not found. Please run unlearning first."}), 404
-        else:
-            # Base model (or forged if available)
-            model_path = "./forged_model" if os.path.exists("./forged_model") else "distilgpt2"
-            
-        response_text = generate_text(model_path, prompt)
-        
-        return jsonify({
-            "status": "success",
-            "model": model_path,
-            "response": response_text
-        })
-
-    except Exception as e:
-        logger.error(f"Error in /api/query_model: {e}")
         return jsonify({"error": str(e)}), 500
 
 
