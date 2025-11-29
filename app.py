@@ -431,6 +431,128 @@ from werkzeug.utils import secure_filename
 
 import random
 
+# Demo knowledge base for unlearning demo
+DEMO_KNOWLEDGE = {
+    "alice": {
+        "facts": {
+            "job": "Alice is a software engineer at TechCorp.",
+            "hobby": "Alice enjoys hiking in the mountains.",
+            "location": "Alice lives in San Francisco.",
+            "education": "Alice graduated from MIT with a CS degree."
+        },
+        "forgotten": set()
+    },
+    "bob": {
+        "facts": {
+            "job": "Bob is a doctor at City Hospital.",
+            "hobby": "Bob loves playing chess.",
+            "location": "Bob lives in New York.",
+            "education": "Bob graduated from Harvard Medical School."
+        },
+        "forgotten": set()
+    },
+    "charlie": {
+        "facts": {
+            "job": "Charlie is a teacher at Lincoln High School.",
+            "hobby": "Charlie enjoys painting landscapes.",
+            "location": "Charlie lives in Chicago.",
+            "education": "Charlie has a Master's in Education from UCLA."
+        },
+        "forgotten": set()
+    }
+}
+
+@app.route('/api/unlearn/demo/ask', methods=['POST'])
+def api_unlearn_demo_ask():
+    """Simulates asking the AI about a person in the demo."""
+    data = request.get_json()
+    person = data.get('person', '').lower()
+    question_type = data.get('question_type', 'job')
+    
+    if person not in DEMO_KNOWLEDGE:
+        return jsonify({
+            "response": f"I don't have any information about {person}.",
+            "knows": False
+        })
+    
+    person_data = DEMO_KNOWLEDGE[person]
+    
+    # Check if this fact has been "forgotten"
+    if question_type in person_data["forgotten"]:
+        responses = [
+            f"I'm sorry, I don't have any information about {person.title()}'s {question_type}.",
+            f"I'm not aware of details about {person.title()}'s {question_type}.",
+            f"I don't have that information about {person.title()} anymore.",
+            f"That information about {person.title()} is not available to me."
+        ]
+        return jsonify({
+            "response": random.choice(responses),
+            "knows": False,
+            "forgotten": True
+        })
+    
+    # Return the fact
+    fact = person_data["facts"].get(question_type, f"I know about {person.title()}, but I'm not sure about their {question_type}.")
+    return jsonify({
+        "response": fact,
+        "knows": True,
+        "forgotten": False
+    })
+
+@app.route('/api/unlearn/demo/forget', methods=['POST'])
+def api_unlearn_demo_forget():
+    """Simulates forgetting information about a person."""
+    data = request.get_json()
+    person = data.get('person', '').lower()
+    fact_type = data.get('fact_type', 'all')
+    
+    if person not in DEMO_KNOWLEDGE:
+        return jsonify({"error": f"Unknown person: {person}"}), 400
+    
+    person_data = DEMO_KNOWLEDGE[person]
+    
+    if fact_type == 'all':
+        # Forget all facts about this person
+        person_data["forgotten"] = set(person_data["facts"].keys())
+        forgotten_count = len(person_data["facts"])
+    else:
+        # Forget specific fact type
+        if fact_type in person_data["facts"]:
+            person_data["forgotten"].add(fact_type)
+            forgotten_count = 1
+        else:
+            return jsonify({"error": f"Unknown fact type: {fact_type}"}), 400
+    
+    return jsonify({
+        "status": "success",
+        "message": f"Successfully removed {forgotten_count} fact(s) about {person.title()} from the model.",
+        "person": person,
+        "forgotten_facts": list(person_data["forgotten"])
+    })
+
+@app.route('/api/unlearn/demo/reset', methods=['POST'])
+def api_unlearn_demo_reset():
+    """Resets the demo to its initial state."""
+    for person in DEMO_KNOWLEDGE:
+        DEMO_KNOWLEDGE[person]["forgotten"] = set()
+    
+    return jsonify({
+        "status": "success",
+        "message": "Demo has been reset. All knowledge restored."
+    })
+
+@app.route('/api/unlearn/demo/status', methods=['GET'])
+def api_unlearn_demo_status():
+    """Returns the current state of the demo knowledge base."""
+    status = {}
+    for person, data in DEMO_KNOWLEDGE.items():
+        status[person] = {
+            "total_facts": len(data["facts"]),
+            "forgotten_facts": len(data["forgotten"]),
+            "available_facts": len(data["facts"]) - len(data["forgotten"]),
+            "forgotten_types": list(data["forgotten"])
+        }
+    return jsonify(status)
 
 
 @app.route('/api/unlearn', methods=['POST'])

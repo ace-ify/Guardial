@@ -1625,6 +1625,370 @@
             }
         }
 
+        /* ===== INTERACTIVE DEMO STYLES ===== */
+        .demo-section {
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0.95), rgba(20, 20, 30, 0.95));
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 20px;
+            padding: 32px;
+            margin-bottom: 40px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+        }
+
+        .demo-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .demo-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 22px;
+            font-weight: 800;
+        }
+
+        .demo-badge {
+            background: linear-gradient(135deg, #f472b6, #ec4899);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .demo-reset-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--text);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .demo-reset-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.25);
+        }
+
+        .demo-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 900px) {
+            .demo-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .demo-panel {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .demo-panel-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .demo-panel-title {
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .demo-status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #86efac;
+            animation: pulse 2s infinite;
+        }
+
+        .demo-status-dot.forgotten {
+            background: #f87171;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Chat Interface */
+        .demo-chat {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 300px;
+        }
+
+        .demo-chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 16px;
+            max-height: 280px;
+            padding-right: 8px;
+        }
+
+        .demo-chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .demo-chat-messages::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 6px;
+        }
+
+        .demo-message {
+            margin-bottom: 12px;
+            display: flex;
+            gap: 10px;
+            animation: fadeInUp 0.3s ease;
+        }
+
+        .demo-message.user {
+            flex-direction: row-reverse;
+        }
+
+        .demo-message-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .demo-message.user .demo-message-avatar {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+        }
+
+        .demo-message.ai .demo-message-avatar {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        }
+
+        .demo-message-content {
+            background: rgba(255, 255, 255, 0.06);
+            padding: 10px 14px;
+            border-radius: 12px;
+            max-width: 85%;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .demo-message.user .demo-message-content {
+            background: rgba(59, 130, 246, 0.15);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .demo-message.ai .demo-message-content {
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+        }
+
+        .demo-message.ai.forgotten .demo-message-content {
+            background: rgba(248, 113, 113, 0.1);
+            border: 1px solid rgba(248, 113, 113, 0.2);
+            color: #fca5a5;
+        }
+
+        .demo-chat-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .demo-select-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .demo-select {
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .demo-select:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .demo-ask-btn {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .demo-ask-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        /* Unlearn Panel */
+        .demo-unlearn-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .demo-person-cards {
+            display: grid;
+            gap: 10px;
+        }
+
+        .demo-person-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .demo-person-card:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.12);
+        }
+
+        .demo-person-card.partially-forgotten {
+            border-color: rgba(251, 191, 36, 0.3);
+            background: rgba(251, 191, 36, 0.05);
+        }
+
+        .demo-person-card.fully-forgotten {
+            border-color: rgba(248, 113, 113, 0.3);
+            background: rgba(248, 113, 113, 0.05);
+        }
+
+        .demo-person-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .demo-person-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+        }
+
+        .demo-person-name {
+            font-weight: 700;
+        }
+
+        .demo-person-status {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .demo-person-status.forgotten {
+            color: #f87171;
+        }
+
+        .demo-forget-btn {
+            background: linear-gradient(135deg, #f87171, #ef4444);
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .demo-forget-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(248, 113, 113, 0.3);
+        }
+
+        .demo-forget-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .demo-forget-select {
+            padding: 8px 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 6px;
+            color: var(--text);
+            font-size: 12px;
+            margin-right: 8px;
+        }
+
+        /* Demo instruction text */
+        .demo-instructions {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 16px;
+            background: rgba(139, 92, 246, 0.08);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+
+        .demo-instructions-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .demo-instructions-text {
+            font-size: 14px;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .demo-instructions-text strong {
+            color: var(--text);
+        }
+
         .footer {
             text-align: center;
             color: var(--muted);
@@ -1734,6 +2098,136 @@
                                 GDPR Ready</div>
                             <div style="font-weight: 700;">Right to be Forgotten</div>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interactive Demo Section -->
+            <div class="demo-section" id="demo">
+                <div class="demo-header">
+                    <div class="demo-title">
+                        <span>🎭</span>
+                        <span>Interactive Demo: Before & After</span>
+                        <span class="demo-badge">Try It!</span>
+                    </div>
+                    <button class="demo-reset-btn" onclick="resetDemo()">🔄 Reset Demo</button>
+                </div>
+
+                <div class="demo-grid">
+                    <!-- Left Panel: Ask the AI -->
+                    <div class="demo-panel">
+                        <div class="demo-panel-header">
+                            <span class="demo-status-dot" id="chatStatusDot"></span>
+                            <span class="demo-panel-title">💬 Ask the AI</span>
+                        </div>
+                        <div class="demo-chat">
+                            <div class="demo-chat-messages" id="demoChatMessages">
+                                <div class="demo-message ai">
+                                    <div class="demo-message-avatar">🤖</div>
+                                    <div class="demo-message-content">
+                                        Hello! I'm an AI that knows about Alice, Bob, and Charlie. Ask me anything about their jobs, hobbies, locations, or education!
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="demo-chat-controls">
+                                <div class="demo-select-row">
+                                    <select class="demo-select" id="demoPersonSelect">
+                                        <option value="alice">👩 Alice</option>
+                                        <option value="bob">👨 Bob</option>
+                                        <option value="charlie">👨‍🦱 Charlie</option>
+                                    </select>
+                                    <select class="demo-select" id="demoQuestionSelect">
+                                        <option value="job">💼 Job</option>
+                                        <option value="hobby">🎨 Hobby</option>
+                                        <option value="location">📍 Location</option>
+                                        <option value="education">🎓 Education</option>
+                                    </select>
+                                </div>
+                                <button class="demo-ask-btn" onclick="askDemoQuestion()">
+                                    <span>Ask Question</span>
+                                    <span>→</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Panel: Unlearn Controls -->
+                    <div class="demo-panel">
+                        <div class="demo-panel-header">
+                            <span class="demo-status-dot" id="unlearnStatusDot"></span>
+                            <span class="demo-panel-title">🧠 Make AI Forget</span>
+                        </div>
+                        <div class="demo-unlearn-controls">
+                            <div class="demo-person-cards" id="demoPersonCards">
+                                <div class="demo-person-card" data-person="alice">
+                                    <div class="demo-person-info">
+                                        <div class="demo-person-avatar">👩</div>
+                                        <div>
+                                            <div class="demo-person-name">Alice</div>
+                                            <div class="demo-person-status" id="aliceStatus">4 facts known</div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <select class="demo-forget-select" id="aliceForgetSelect">
+                                            <option value="all">All facts</option>
+                                            <option value="job">Job</option>
+                                            <option value="hobby">Hobby</option>
+                                            <option value="location">Location</option>
+                                            <option value="education">Education</option>
+                                        </select>
+                                        <button class="demo-forget-btn" onclick="forgetPerson('alice')">Forget</button>
+                                    </div>
+                                </div>
+                                <div class="demo-person-card" data-person="bob">
+                                    <div class="demo-person-info">
+                                        <div class="demo-person-avatar">👨</div>
+                                        <div>
+                                            <div class="demo-person-name">Bob</div>
+                                            <div class="demo-person-status" id="bobStatus">4 facts known</div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <select class="demo-forget-select" id="bobForgetSelect">
+                                            <option value="all">All facts</option>
+                                            <option value="job">Job</option>
+                                            <option value="hobby">Hobby</option>
+                                            <option value="location">Location</option>
+                                            <option value="education">Education</option>
+                                        </select>
+                                        <button class="demo-forget-btn" onclick="forgetPerson('bob')">Forget</button>
+                                    </div>
+                                </div>
+                                <div class="demo-person-card" data-person="charlie">
+                                    <div class="demo-person-info">
+                                        <div class="demo-person-avatar">👨‍🦱</div>
+                                        <div>
+                                            <div class="demo-person-name">Charlie</div>
+                                            <div class="demo-person-status" id="charlieStatus">4 facts known</div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <select class="demo-forget-select" id="charlieForgetSelect">
+                                            <option value="all">All facts</option>
+                                            <option value="job">Job</option>
+                                            <option value="hobby">Hobby</option>
+                                            <option value="location">Location</option>
+                                            <option value="education">Education</option>
+                                        </select>
+                                        <button class="demo-forget-btn" onclick="forgetPerson('charlie')">Forget</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="demo-instructions">
+                    <div class="demo-instructions-icon">💡</div>
+                    <div class="demo-instructions-text">
+                        <strong>How to use:</strong> First, ask the AI about someone (left panel) to see what it knows. 
+                        Then, click "Forget" on the right panel to make the AI forget that information. 
+                        Ask the same question again - the AI will no longer know the answer! This demonstrates the 
+                        <strong>before and after</strong> of LLM unlearning.
                     </div>
                 </div>
             </div>
@@ -1881,6 +2375,201 @@
     <script>
         // Footer year
         document.getElementById('year').textContent = new Date().getFullYear();
+
+        // ===== INTERACTIVE DEMO FUNCTIONS =====
+        const questionLabels = {
+            job: "What is their job?",
+            hobby: "What is their hobby?",
+            location: "Where do they live?",
+            education: "What is their education?"
+        };
+
+        async function askDemoQuestion() {
+            const person = document.getElementById('demoPersonSelect').value;
+            const questionType = document.getElementById('demoQuestionSelect').value;
+            const chatMessages = document.getElementById('demoChatMessages');
+            
+            // Add user message
+            const personName = person.charAt(0).toUpperCase() + person.slice(1);
+            const userMsg = document.createElement('div');
+            userMsg.className = 'demo-message user';
+            userMsg.innerHTML = `
+                <div class="demo-message-avatar">👤</div>
+                <div class="demo-message-content">${questionLabels[questionType]} (about ${personName})</div>
+            `;
+            chatMessages.appendChild(userMsg);
+            
+            // Scroll to bottom
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            try {
+                const response = await fetch('/api/unlearn/demo/ask', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ person, question_type: questionType })
+                });
+                
+                const data = await response.json();
+                
+                // Add AI response
+                const aiMsg = document.createElement('div');
+                aiMsg.className = 'demo-message ai' + (data.forgotten ? ' forgotten' : '');
+                aiMsg.innerHTML = `
+                    <div class="demo-message-avatar">🤖</div>
+                    <div class="demo-message-content">${data.response}</div>
+                `;
+                chatMessages.appendChild(aiMsg);
+                
+                // Update status dot
+                const statusDot = document.getElementById('chatStatusDot');
+                if (data.forgotten) {
+                    statusDot.classList.add('forgotten');
+                }
+                
+            } catch (error) {
+                console.error('Error asking demo question:', error);
+            }
+            
+            // Scroll to bottom
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        async function forgetPerson(person) {
+            const selectId = person + 'ForgetSelect';
+            const factType = document.getElementById(selectId).value;
+            
+            // Show loading state
+            const card = document.querySelector(`.demo-person-card[data-person="${person}"]`);
+            const btn = card.querySelector('.demo-forget-btn');
+            const originalText = btn.textContent;
+            btn.textContent = '⏳';
+            btn.disabled = true;
+            
+            // Add unlearning animation message to chat
+            const chatMessages = document.getElementById('demoChatMessages');
+            const factLabel = factType === 'all' ? 'all facts' : factType;
+            const personName = person.charAt(0).toUpperCase() + person.slice(1);
+            
+            const systemMsg = document.createElement('div');
+            systemMsg.className = 'demo-message ai';
+            systemMsg.innerHTML = `
+                <div class="demo-message-avatar">⚙️</div>
+                <div class="demo-message-content" style="background: rgba(251, 191, 36, 0.1); border-color: rgba(251, 191, 36, 0.2); color: #fcd34d;">
+                    🧠 Unlearning ${factLabel} about ${personName}... <br>
+                    <small style="opacity: 0.7;">Applying gradient ascent to forget specific information...</small>
+                </div>
+            `;
+            chatMessages.appendChild(systemMsg);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            // Simulate processing time
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            
+            try {
+                const response = await fetch('/api/unlearn/demo/forget', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ person, fact_type: factType })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    // Add success message
+                    const successMsg = document.createElement('div');
+                    successMsg.className = 'demo-message ai forgotten';
+                    successMsg.innerHTML = `
+                        <div class="demo-message-avatar">✅</div>
+                        <div class="demo-message-content">
+                            ${data.message}<br>
+                            <small style="opacity: 0.7;">Ask me about ${personName} again to see the difference!</small>
+                        </div>
+                    `;
+                    chatMessages.appendChild(successMsg);
+                    
+                    // Update UI
+                    await updateDemoStatus();
+                }
+                
+            } catch (error) {
+                console.error('Error forgetting person:', error);
+            }
+            
+            btn.textContent = originalText;
+            btn.disabled = false;
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        async function updateDemoStatus() {
+            try {
+                const response = await fetch('/api/unlearn/demo/status');
+                const data = await response.json();
+                
+                for (const [person, status] of Object.entries(data)) {
+                    const statusEl = document.getElementById(person + 'Status');
+                    const card = document.querySelector(`.demo-person-card[data-person="${person}"]`);
+                    
+                    if (status.forgotten_facts === status.total_facts) {
+                        statusEl.textContent = 'All facts forgotten';
+                        statusEl.classList.add('forgotten');
+                        card.classList.add('fully-forgotten');
+                        card.classList.remove('partially-forgotten');
+                    } else if (status.forgotten_facts > 0) {
+                        statusEl.textContent = `${status.available_facts} facts known, ${status.forgotten_facts} forgotten`;
+                        card.classList.add('partially-forgotten');
+                        card.classList.remove('fully-forgotten');
+                    } else {
+                        statusEl.textContent = `${status.total_facts} facts known`;
+                        statusEl.classList.remove('forgotten');
+                        card.classList.remove('partially-forgotten', 'fully-forgotten');
+                    }
+                }
+                
+                // Update unlearn status dot
+                const totalForgotten = Object.values(data).reduce((sum, s) => sum + s.forgotten_facts, 0);
+                const unlearnStatusDot = document.getElementById('unlearnStatusDot');
+                if (totalForgotten > 0) {
+                    unlearnStatusDot.classList.add('forgotten');
+                } else {
+                    unlearnStatusDot.classList.remove('forgotten');
+                }
+                
+            } catch (error) {
+                console.error('Error updating demo status:', error);
+            }
+        }
+
+        async function resetDemo() {
+            try {
+                await fetch('/api/unlearn/demo/reset', { method: 'POST' });
+                
+                // Clear chat messages except the first one
+                const chatMessages = document.getElementById('demoChatMessages');
+                chatMessages.innerHTML = `
+                    <div class="demo-message ai">
+                        <div class="demo-message-avatar">🤖</div>
+                        <div class="demo-message-content">
+                            Hello! I'm an AI that knows about Alice, Bob, and Charlie. Ask me anything about their jobs, hobbies, locations, or education!
+                        </div>
+                    </div>
+                `;
+                
+                // Reset status dots
+                document.getElementById('chatStatusDot').classList.remove('forgotten');
+                document.getElementById('unlearnStatusDot').classList.remove('forgotten');
+                
+                // Update status
+                await updateDemoStatus();
+                
+            } catch (error) {
+                console.error('Error resetting demo:', error);
+            }
+        }
+
+        // Initialize demo status on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            updateDemoStatus();
+        });
 
         document.addEventListener('DOMContentLoaded', () => {
             initNavShrink();
